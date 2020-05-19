@@ -1,3 +1,5 @@
 .vscode
 *.out
 *.py
+*dSYM
+__pycache__
