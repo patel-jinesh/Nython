@@ -1,3 +1,6 @@
+#ifndef OPCODES_H
+#define OPCODES_H
+
 const unsigned char POP_TOP = 1;
 const unsigned char ROT_TWO = 2;
 const unsigned char ROT_THREE = 3;
@@ -118,3 +121,4 @@ const unsigned char LOAD_METHOD = 160;
 const unsigned char CALL_METHOD = 161;
 const unsigned char CALL_FINALLY = 162;
 const unsigned char POP_FINALLY = 163;
+#endif
