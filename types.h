@@ -77,6 +77,7 @@ class PyString : public PyObject {
         }
 };
 
+
 class PyLong : public PyObject {
     private:
         static const int PyLongShift = 15; // or 30, only supporting 15 for now.
@@ -143,11 +144,11 @@ class PyCode : public PyObject {
         int stacksize;
         int flags;
         PyString * instructions;
-        PyObject * consts;
-        PyObject * names;
-        PyObject * varnames;
-        PyObject * freevars;
-        PyObject * cellvars;
+        PyObject * consts; //PyTuple
+        PyObject * names; //PyTuple
+        PyObject * varnames; //PyTuple
+        PyObject * freevars; //PyTuple
+        PyObject * cellvars; //PyTuple
         PyString * filename;
         PyString * name;
         int firstlineno;
@@ -217,6 +218,75 @@ class PyTuple : public PyObject {
                 else
                     ss << data[i]->toString() + (i == size - 1 ? "" : ", ");
             ss << ")";
+            return ss.str();
+        }
+};
+
+class PySet : public PyObject {
+    private:
+        int size;
+        PyObject ** data;
+
+    public:
+        PySet(int size) : size(size) {
+            data = new PyObject * [size];
+        }
+
+        PyObject * & operator[](int index) {
+            if (index < 0 || index >= size)
+                throw "Array index out of bound, exiting"; 
+            
+            return data[index]; 
+        }
+
+        ~PySet(){
+            delete[] data;
+        }
+
+        string toString() {
+            stringstream ss;
+            ss << "{";
+            for (int i = 0; i < size; i++)
+                if (PyCode * code = dynamic_cast<PyCode *>(data[i]))
+                    ss << "\n\t\t\t" << regex_replace(code->toString(), std::regex("\n"), "\n\t\t\t") << ",";
+                else
+                    ss << data[i]->toString() + (i == size - 1 ? "" : ", ");
+            ss << "}";
+            return ss.str();
+        }
+};
+
+
+class PyList : public PyObject {
+    private:
+        int size;
+        PyObject ** data;
+
+    public:
+        PyList(int size) : size(size) {
+            data = new PyObject * [size];
+        }
+
+        PyObject * & operator[](int index) {
+            if (index < 0 || index >= size)
+                throw "Array index out of bound, exiting"; 
+            
+            return data[index]; 
+        }
+
+        ~PyList(){
+            delete[] data;
+        }
+
+        string toString() {
+            stringstream ss;
+            ss << "{";
+            for (int i = 0; i < size; i++)
+                if (PyCode * code = dynamic_cast<PyCode *>(data[i]))
+                    ss << "\n\t\t\t" << regex_replace(code->toString(), std::regex("\n"), "\n\t\t\t") << ",";
+                else
+                    ss << data[i]->toString() + (i == size - 1 ? "" : ", ");
+            ss << "}";
             return ss.str();
         }
 };
