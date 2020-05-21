@@ -1,0 +1,13 @@
+#include "types.h"
+
+PyDict::PyDict(int size, PyObject * items) : size(size) {
+    data = std::unordered_map<PyObject *, PyObject *>(size);
+
+    for (int i = 0; i < size; i++) {
+        data[items + 2*i] = items + 2*i + 1;
+    }
+}
+
+string PyDict::toString() {
+    return "Warning: dict nyi";
+}

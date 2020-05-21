@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <memory>
 #include <unordered_map>
-#include "types.h"
+#include "types/types.h"
 
 PyCode * read(const char * filename);
 #endif
