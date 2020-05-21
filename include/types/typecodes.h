@@ -1,5 +1,6 @@
 #ifndef TYPECODES_H
 #define TYPECODES_H
+
 enum TypeCode : unsigned char {
     TYPE_NULL                 = '0',
     TYPE_NONE                 = 'N',
@@ -31,4 +32,5 @@ enum TypeCode : unsigned char {
     TYPE_SHORT_ASCII          = 'z',
     TYPE_SHORT_ASCII_INTERNED = 'Z',
 };
+
 #endif

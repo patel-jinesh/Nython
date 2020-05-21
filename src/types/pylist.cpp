@@ -1,14 +1,22 @@
-#include "types.h"
+#include "types/types.h"
 
-PySet::PySet(int size) : size(size) {
-    data = new PyObject * [size];
+PyList::PyList(int size)
+    : size(size) {
+    data = new PyObject *[size];
 }
 
-PySet::~PySet(){
+PyList::~PyList() {
     delete[] data;
 }
 
-string PySet::toString() {
+PyObject *& PyList::operator[](int index) {
+    if (index < 0 || index >= size)
+        throw "Array index out of bound, exiting";
+
+    return data[index];
+}
+
+string PyList::toString() {
     stringstream ss;
     ss << "{";
     for (int i = 0; i < size; i++)

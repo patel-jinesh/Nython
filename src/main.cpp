@@ -1,6 +1,7 @@
-#include "opcodes.h"
 #include <iostream>
+
 #include "read.h"
+#include "vm/opcodes.h"
 
 int main() {
     const char * filename = "__pycache__/test.cpython-37.pyc";

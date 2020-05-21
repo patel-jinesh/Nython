@@ -44,6 +44,13 @@ void run(PyCode * code) {
             case RETURN_VALUE:
                 vm.index+=2;
                 break;
+
+            case STORE_NAME:
+                vm.index+=2;
+                break;
+
+            case MAKE_FUNCTION:
+                make_function(&vm, oparg);
         }
     }
 }
@@ -87,4 +94,8 @@ void call_function(VM *vm, unsigned char oparg) {
             vm->frame.push(new PyNone());
         }
     }
+}
+
+void make_function() {
+    
 }

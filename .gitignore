@@ -3,3 +3,6 @@
 *.py
 *dSYM
 __pycache__
+bin
+.DS_STORE
+local
