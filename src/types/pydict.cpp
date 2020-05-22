@@ -1,7 +1,6 @@
 #include "types/types.h"
 
-PyDict::PyDict(int size, PyObject * items)
-    : size(size) {
+PyDict::PyDict(int size, PyObject * items) {
     data = std::unordered_map<PyObject *, PyObject *>(size);
 
     for (int i = 0; i < size; i++) {

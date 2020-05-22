@@ -11,7 +11,6 @@ using namespace std;
 
 class PyObject {
   public:
-    virtual ~PyObject() {}
     virtual string toString() = 0;
 };
 
@@ -139,7 +138,6 @@ class PyList : public PyObject {
 
 class PyDict : public PyObject {
   private:
-    int                                        size;
     std::unordered_map<PyObject *, PyObject *> data;
 
   public:
@@ -147,6 +145,23 @@ class PyDict : public PyObject {
 
     PyObject *& operator[](PyObject * index);
 
+    string toString();
+};
+
+class PyFloat : public PyObject {
+  public:
+    double data;
+    PyFloat(double value);
+
+    string toString();
+};
+
+class PyComplex : public PyObject {
+  public:
+    double a;
+    double b;
+
+    PyComplex(double a, double b);
     string toString();
 };
 
