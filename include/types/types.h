@@ -16,35 +16,37 @@ class PyObject {
 
 class PyFalse : public PyObject {
   public:
-    virtual string toString() {
+    string toString() {
         return "False";
     }
 };
 
 class PyTrue : public PyObject {
   public:
-    virtual string toString() {
+    string toString() {
         return "True";
     }
 };
 
 class PyEllipsis : public PyObject {
   public:
-    virtual string toString() {
+    string toString() {
         return "...";
     }
 };
 
 class PyStopIteration : public PyObject {
   public:
-    virtual string toString() {
+    string toString() {
         return "StopIteration??";
     }
 };
 
 class PyNone : public PyObject {
   public:
-    string toString();
+    string toString() {
+        return "None";
+    }
 };
 
 class PyString : public PyObject {
@@ -61,7 +63,6 @@ class PyLong : public PyObject {
     short * ob_digit;
     int     size;
 
-    // Only supporting PyShift = 15 for now.
     PyLong(int size, short data[]);
 
     PyLong(long value);
