@@ -29,6 +29,7 @@ inline PyTuple *       read_tuple        (PYFILE * file);
 inline PyString *      read_string       (PYFILE * file);
 inline PyCode *        read_code         (PYFILE * file);
 inline PyString *      read_short_ascii  (PYFILE * file);
+inline PyString *      read_ascii        (PYFILE * file);
 inline PyLong *        read_pylong       (PYFILE * file);
 inline PyFloat *       read_pybinfloat   (PYFILE * file);
 inline PyComplex *     read_pybincomplex (PYFILE * file);

@@ -46,29 +46,29 @@ inline PyObject * read_object(PYFILE * file) {
         case TYPE_STOPITER:                 obj = new PyStopIteration();            break;
         case TYPE_ELLIPSIS:                 obj = new PyEllipsis();                 break;
         case TYPE_INT64:                    obj = read_pyint64(file);               break; // Only for python2 which is eol. Here for completeness.
-        case TYPE_FLOAT:                                                            break; // this only happens when marshal version = 0 or 1., no support
+        case TYPE_FLOAT:                                                            break; // this only happens when marshal version = 0 or 1., not supporting (for now perhaps)
         case TYPE_BINARY_FLOAT:             obj = read_pybinfloat(file);            break; 
-        case TYPE_COMPLEX:                                                          break; // this only happens when marshal version = 0 or 1., no support
+        case TYPE_COMPLEX:                                                          break; // this only happens when marshal version = 0 or 1., not supporting (for now perhaps)
         case TYPE_BINARY_COMPLEX:           obj = read_pybincomplex(file);          break; 
         case TYPE_INT:                      obj = read_pyint(file);                 break; 
         case TYPE_LONG:                     obj = read_pylong(file);                break; 
         case TYPE_TUPLE:                    obj = read_tuple(file);                 break;
         case TYPE_LIST:                     obj = read_list(file);                  break;
         case TYPE_DICT:                     obj = read_dict(file);                  break;
-        case TYPE_INTERNED:                                                                // YTI 
-        case TYPE_UNICODE:                                                          break; // YTI 
-        case TYPE_UNKNOWN:                                                          break; // YTI 
+        case TYPE_INTERNED:                 isrefed = true;
+        case TYPE_UNICODE:                  obj = nullptr;                          break; // YTI 
+        case TYPE_UNKNOWN:                                                          break;
         case TYPE_SET:
-        case TYPE_FROZENSET:                obj = read_set(file);                   break; // YTI 
-        case TYPE_ASCII:                                                            break; // YTI 
-        case TYPE_ASCII_INTERNED:                                                   break; // YTI 
+        case TYPE_FROZENSET:                obj = read_set(file);                   break;
+        case TYPE_ASCII_INTERNED:           isrefed = true;
+        case TYPE_ASCII:                    obj = read_ascii(file);                 break;
         case TYPE_CODE:                     obj = read_code(file);                  break;
         case TYPE_SMALL_TUPLE:              obj = read_small_tuple(file);           break;
-        case TYPE_SHORT_ASCII_INTERNED:                                                    // YTI 
+        case TYPE_SHORT_ASCII_INTERNED:     isrefed = true;
         case TYPE_SHORT_ASCII:              obj = read_short_ascii(file);           break;
         case TYPE_STRING:                   obj = read_string(file);                break;
         case TYPE_REF:                      obj = file->refs[read_int(file) - 1];   break;
-        case TYPE_NONE:                     obj = new PyNone();                     break;  
+        case TYPE_NONE:                     obj = new PyNone();                     break; 
     }
     // clang-format on
 
@@ -141,6 +141,13 @@ inline PyLong * read_pyint(PYFILE * file) {
 inline PyLong * read_pylong(PYFILE * file) {
     int size = read_int(file);
     return new PyLong(size, (short *) read_bytes(file, (size < 0 ? -size : size) * 2));
+}
+
+inline PyString * read_ascii(PYFILE * file) {
+    PyString * data = new PyString();
+    data->len       = read_int(file);
+    data->value     = (const char *) read_bytes(file, data->len);
+    return data;
 }
 
 inline PyString * read_short_ascii(PYFILE * file) {
