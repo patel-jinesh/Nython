@@ -45,16 +45,16 @@ inline PyObject * read_object(PYFILE * file) {
         case TYPE_TRUE:                     obj = new PyTrue();                     break;
         case TYPE_STOPITER:                 obj = new PyStopIteration();            break;
         case TYPE_ELLIPSIS:                 obj = new PyEllipsis();                 break;
-        case TYPE_INT64:                                                            break; // YTI
-        case TYPE_FLOAT:                                                            break; // YTI 
-        case TYPE_BINARY_FLOAT:             obj = read_pybinfloat(file);            break;
-        case TYPE_COMPLEX:                                                          break; // YTI 
-        case TYPE_BINARY_COMPLEX:           obj = read_pybincomplex(file);          break; // YTI 
-        case TYPE_INT:                      obj = read_pyint(file);                 break;
-        case TYPE_LONG:                     obj = read_pylong(file);                break;
-        case TYPE_TUPLE:                                                            break; // YTI 
+        case TYPE_INT64:                    obj = read_pyint64(file);               break; // Only for python2 which is eol. Here for completeness.
+        case TYPE_FLOAT:                                                            break; // this only happens when marshal version = 0 or 1., no support
+        case TYPE_BINARY_FLOAT:             obj = read_pybinfloat(file);            break; 
+        case TYPE_COMPLEX:                                                          break; // this only happens when marshal version = 0 or 1., no support
+        case TYPE_BINARY_COMPLEX:           obj = read_pybincomplex(file);          break; 
+        case TYPE_INT:                      obj = read_pyint(file);                 break; 
+        case TYPE_LONG:                     obj = read_pylong(file);                break; 
+        case TYPE_TUPLE:                    obj = read_tuple(file);                 break;
         case TYPE_LIST:                     obj = read_list(file);                  break;
-        case TYPE_DICT:                     obj = read_dict(file);                  break; // YTI 
+        case TYPE_DICT:                     obj = read_dict(file);                  break;
         case TYPE_INTERNED:                                                                // YTI 
         case TYPE_UNICODE:                                                          break; // YTI 
         case TYPE_UNKNOWN:                                                          break; // YTI 
@@ -130,8 +130,12 @@ inline PyList * read_list(PYFILE * file) {
     return list;
 }
 
+inline PyLong * read_pyint64(PYFILE * file) {
+    return new PyLong((long long) read_int64(file));
+}
+
 inline PyLong * read_pyint(PYFILE * file) {
-    return new PyLong(read_int(file));
+    return new PyLong((long) read_int(file));
 }
 
 inline PyLong * read_pylong(PYFILE * file) {
@@ -146,6 +150,18 @@ inline PyString * read_short_ascii(PYFILE * file) {
     return data;
 }
 
+inline PyTuple * read_tuple(PYFILE * file) {
+    int n = read_int(file);
+
+    PyTuple * tuple = new PyTuple(n);
+
+    for (int i = 0; i < n; i++) {
+        (*tuple)[i] = read_object(file);
+    }
+
+    return tuple;
+}
+
 inline PyTuple * read_small_tuple(PYFILE * file) {
     int n = read_byte(file);
 
@@ -156,6 +172,12 @@ inline PyTuple * read_small_tuple(PYFILE * file) {
     }
 
     return tuple;
+}
+
+inline long long read_int64(PYFILE * file) {
+    long long data;
+    fread(&data, sizeof(data), 1, file->fptr);
+    return data;
 }
 
 inline int read_int(PYFILE * file) {

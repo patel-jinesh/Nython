@@ -64,6 +64,7 @@ class PyLong : public PyObject {
     PyLong(int size, short data[]);
 
     PyLong(long value);
+    PyLong(long long value);
 
     string toString();
 };

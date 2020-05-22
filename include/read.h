@@ -21,9 +21,11 @@ struct PYFILE {
 inline unsigned char   read_byte        (PYFILE * file);
 inline unsigned char * read_bytes       (PYFILE * file, int num);
 inline int             read_int         (PYFILE * file);
+inline long long       read_int64       (PYFILE * file);
 
 // Reading python objects:
 inline PyTuple *       read_small_tuple  (PYFILE * file);
+inline PyTuple *       read_tuple        (PYFILE * file);
 inline PyString *      read_string       (PYFILE * file);
 inline PyCode *        read_code         (PYFILE * file);
 inline PyString *      read_short_ascii  (PYFILE * file);
