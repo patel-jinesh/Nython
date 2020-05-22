@@ -18,12 +18,12 @@ PyObject *& PyList::operator[](int index) {
 
 string PyList::toString() {
     stringstream ss;
-    ss << "{";
+    ss << "[";
     for (int i = 0; i < size; i++)
         if (PyCode * code = dynamic_cast<PyCode *>(data[i]))
             ss << "\n\t\t\t" << regex_replace(code->toString(), std::regex("\n"), "\n\t\t\t") << ",";
         else
             ss << data[i]->toString() + (i == size - 1 ? "" : ", ");
-    ss << "}";
+    ss << "]";
     return ss.str();
 }

@@ -1,6 +1,5 @@
 .vscode
 *.out
-*.py
 *dSYM
 __pycache__
 bin

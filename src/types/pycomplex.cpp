@@ -6,5 +6,5 @@ PyComplex::PyComplex(double a, double b) {
 }
 
 string PyComplex::toString() {
-    return to_string(a) + " + " + to_string(b) + "j";
+    return to_string(this->a) + " + " + to_string(this->b) + "j";
 }

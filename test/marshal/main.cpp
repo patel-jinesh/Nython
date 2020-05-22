@@ -66,6 +66,10 @@ int main() {
         }
     }
 
+    for (int i = 0; i < 40; i++) {
+        std::cout << i << ": " << arr[i]->toString() << "\n";
+    }
+
     fclose(file->fptr);
     return 0;
 }
