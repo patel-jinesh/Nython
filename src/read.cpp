@@ -79,7 +79,7 @@ inline PyObject * read_object(PYFILE * file) {
 }
 
 inline PyComplex * read_pybincomplex(PYFILE * file) {
-    return new PyComplex((double) *read_bytes(file, sizeof(double)), (double) *read_bytes(file, sizeof(double)));
+    return new PyComplex(*(double *) read_bytes(file, sizeof(double)), *(double *) read_bytes(file, sizeof(double)));
 }
 
 inline PyFloat * read_pybinfloat(PYFILE * file) {
