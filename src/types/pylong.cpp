@@ -1,3 +1,4 @@
+#include <iostream>
 #include <memory>
 
 #include "types/types.h"
@@ -7,7 +8,7 @@ const int PyMarshalShift = 15;
 const int PyMarshalRatio = PyLongShift / PyMarshalShift;
 const int PyMarshalBase  = 1 << PyMarshalShift;
 const int PyLongBase     = 1 << PyLongShift;
-const int PyLongMask     = PyLongShift - 1;
+const int PyLongMask     = PyLongBase - 1;
 
 // Only supporting PyShift = 15, CPython marshal.c always writes in base 2**15 for portability.
 PyLong::PyLong(int size, short data[]) {
@@ -15,14 +16,15 @@ PyLong::PyLong(int size, short data[]) {
     this->ob_digit = data;
 }
 
+PyLong::~PyLong() {
+    delete[] ob_digit;
+}
+
 // Construct the PyLong by converting value to base 2**15.
 // this is used only for TYPE_INT (4 bytes), thus we only
 // need 3 shorts to represent the value in base 2**15
 PyLong::PyLong(long value) {
     this->size = 0;
-
-    if (value == 0)
-        return;
 
     unsigned long abs_ival;
     int           sign;
@@ -46,7 +48,7 @@ PyLong::PyLong(long value) {
         abs_ival >>= PyLongShift;
     }
 
-    ob_digit = new short[size];
+    ob_digit = new short[size]();
     memcpy(this->ob_digit, data, size);
     size *= sign;  // add sign to size;
 
@@ -58,9 +60,6 @@ PyLong::PyLong(long value) {
 // need 5 shorts to represent the value in base 2**15
 PyLong::PyLong(long long value) {
     this->size = 0;
-
-    if (value == 0)
-        return;
 
     unsigned long long abs_ival;
     int                sign;
@@ -84,7 +83,7 @@ PyLong::PyLong(long long value) {
         abs_ival >>= PyLongShift;
     }
 
-    ob_digit = new short[size];
+    ob_digit = new short[size]();
     memcpy(this->ob_digit, data, size);
     size *= sign;  // add sign to size;
 
@@ -92,5 +91,10 @@ PyLong::PyLong(long long value) {
 }
 
 string PyLong::toString() {
-    return "Warning: long nyi";
+    stringstream ss;
+    for (int i = 0; i < (size < 0 ? -size : size); i++) {
+        if (ob_digit)
+            ss << ob_digit[i] << " ";
+    }
+    return ss.str();
 }

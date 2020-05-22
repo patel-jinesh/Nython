@@ -1,17 +1,16 @@
 #include "types/types.h"
 
-PyDict::PyDict(int size, PyObject * items) {
-    data = std::unordered_map<PyObject *, PyObject *>(size);
+PyDict::PyDict(vector<shared_ptr<PyObject>> items) {
+    data = std::unordered_map<shared_ptr<PyObject>, shared_ptr<PyObject>>(items.size());
 
-    for (int i = 0; i < size; i++) {
-        data[items + 2 * i] = items + 2 * i + 1;
-    }
+    for (int i = 0; i < items.size(); i += 2)
+        data[items[i]] = items[i + 1];
 }
 
 string PyDict::toString() {
     return "Warning: dict nyi";
 }
 
-PyObject *& PyDict::operator[](PyObject * index) {
+shared_ptr<PyObject> & PyDict::operator[](shared_ptr<PyObject> index) {
     return data[index];
 }

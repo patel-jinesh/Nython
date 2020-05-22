@@ -53,6 +53,7 @@ class PyString : public PyObject {
     const char * value;
 
     string toString();
+    ~PyString();
 };
 
 class PyLong : public PyObject {
@@ -67,84 +68,77 @@ class PyLong : public PyObject {
     PyLong(long long value);
 
     string toString();
+    ~PyLong();
 };
 
 class PyTuple : public PyObject {
   private:
-    PyObject ** data;
-    int         size;
+    vector<shared_ptr<PyObject>> data;
+    int                          size;
 
   public:
     PyTuple(int size);
 
-    PyObject *& operator[](int index);
-
-    ~PyTuple();
+    shared_ptr<PyObject> & operator[](int index);
 
     string toString();
 };
 
 class PyCode : public PyObject {
   public:
-    int        argcount;
-    int        kwonlyargcount;
-    int        nlocals;
-    int        stacksize;
-    int        flags;
-    PyString * instructions;
-    PyTuple *  consts;
-    PyTuple *  names;
-    PyTuple *  varnames;
-    PyTuple *  freevars;
-    PyTuple *  cellvars;
-    PyString * filename;
-    PyString * name;
-    int        firstlineno;
-    PyString * lnotab;
+    int                  argcount;
+    int                  kwonlyargcount;
+    int                  nlocals;
+    int                  stacksize;
+    int                  flags;
+    shared_ptr<PyString> instructions;
+    shared_ptr<PyTuple>  consts;
+    shared_ptr<PyTuple>  names;
+    shared_ptr<PyTuple>  varnames;
+    shared_ptr<PyTuple>  freevars;
+    shared_ptr<PyTuple>  cellvars;
+    shared_ptr<PyString> filename;
+    shared_ptr<PyString> name;
+    int                  firstlineno;
+    shared_ptr<PyString> lnotab;
 
     string toString();
-
-    ~PyCode();
 };
 
 class PySet : public PyObject {
   private:
-    int         size;
-    PyObject ** data;
+    int                          size;
+    vector<shared_ptr<PyObject>> data;
 
   public:
     PySet(int size);
 
-    PyObject *& operator[](int index);
-
-    ~PySet();
+    shared_ptr<PyObject> & operator[](int index);
 
     string toString();
 };
 
 class PyList : public PyObject {
   private:
-    int         size;
-    PyObject ** data;
+    int                          size;
+    vector<shared_ptr<PyObject>> data;
 
   public:
     PyList(int size);
 
-    PyObject *& operator[](int index);
-
-    ~PyList();
+    shared_ptr<PyObject> & operator[](int index);
 
     string toString();
 };
 
 class PyDict : public PyObject {
   private:
-    std::unordered_map<PyObject *, PyObject *> data;
+    std::unordered_map<shared_ptr<PyObject>, shared_ptr<PyObject>> data;
 
   public:
-    PyDict(int size, PyObject * items);
+    PyDict(vector<shared_ptr<PyObject>> items);
 
-    PyObject *& operator[](PyObject * index);
+    shared_ptr<PyObject> & operator[](shared_ptr<PyObject> index);
 
     string toString();
 };

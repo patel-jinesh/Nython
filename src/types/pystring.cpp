@@ -3,3 +3,7 @@
 string PyString::toString() {
     return string(value, len);
 }
+
+PyString::~PyString() {
+    delete[] value;
+}

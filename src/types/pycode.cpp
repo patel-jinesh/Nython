@@ -20,15 +20,3 @@ string PyCode::toString() {
     ss << "lnotab:         " << lnotab->toString() << "\n";
     return ss.str();
 }
-
-PyCode::~PyCode() {
-    delete instructions;
-    delete consts;
-    delete names;
-    delete varnames;
-    delete freevars;
-    delete cellvars;
-    delete filename;
-    delete name;
-    delete lnotab;
-}

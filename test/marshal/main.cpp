@@ -54,9 +54,11 @@ int main() {
     PYFILE * file = new PYFILE();
     file->fptr    = fopen(filename, "r");
 
-    PyObject * arr[40];
+    const int size = 40;
 
-    for (int i = 0; i < 40; i++) {
+    shared_ptr<PyObject> arr[size];
+
+    for (int i = 0; i < size; i++) {
         arr[i] = read_object(file);
         std::cout << i + 1 << ": ";
         if (arr[i] != NULL) {
@@ -66,10 +68,15 @@ int main() {
         }
     }
 
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < size; i++) {
         std::cout << i << ": " << arr[i]->toString() << "\n";
     }
 
+    for (int i = 0; i < size; i++) {
+        std::cout << "Currently deleting: " << i << std::endl;
+    }
+
     fclose(file->fptr);
+    delete file;
     return 0;
 }
