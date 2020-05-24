@@ -70,7 +70,19 @@ class PyLong : public PyObject {
 
     string toString();
     ~PyLong();
+
+    PyLong(const PyLong & other);
+    PyLong(PyLong && other) noexcept;
+
+    PyLong & operator=(PyLong && other) noexcept;
+    PyLong & operator=(const PyLong & other);
 };
+
+PyLong operator-(const PyLong & a);
+PyLong operator-(const PyLong & a, const PyLong & b);
+
+PyLong
+operator+(const PyLong & a, const PyLong & b);
 
 class PyTuple : public PyObject {
   private:
