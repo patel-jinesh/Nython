@@ -4,19 +4,17 @@
 int main() {
     PyLong a(-9223372036854775807L);
     PyLong b(9223372036854775807L);
+    PyLong d(-5, new short[5] {0, 0, 0, 0, 16});
 
     PyLong c = a - b;
 
-    PyLong d = c;
-
-    std::cout << (c.size < 0 ? "-" : "");
-
-    for (int i = 0; i < abs(c.size); i++) {
-        std::cout << c.ob_digit[i] << " ";
+    for (int i = 0; i < abs(a.size); i++) {
+        std::cout << a.ob_digit[i] << " ";
     }
 
-    if (c.size == 0)
-        std::cout << 0;
+    std::cout << std::endl;
+
+    std::cout << d.toString();
 
     return 0;
 }

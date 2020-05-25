@@ -2,12 +2,14 @@
 #include <memory>
 #include "types/types.h"
 
-const int PyLongShift    = 15;
-const int PyMarshalShift = 15;
-const int PyMarshalRatio = PyLongShift / PyMarshalShift;
-const int PyMarshalBase  = 1 << PyMarshalShift;
-const int PyLongBase     = 1 << PyLongShift;
-const int PyLongMask     = PyLongBase - 1;
+const int PyLongShift        = 15;
+const int PyMarshalShift     = 15;
+const int PyMarshalRatio     = PyLongShift / PyMarshalShift;
+const int PyMarshalBase      = 1 << PyMarshalShift;
+const int PyLongBase         = 1 << PyLongShift;
+const int PyLongMask         = PyLongBase - 1;
+const int PyLongDecimalShift = 4;     /* max(e such that 10**e fits in a digit) */
+const int PyLongDecimalBase  = 10000; /* 10 ** DECIMAL_SHIFT */
 
 // Only supporting PyShift = 15, CPython marshal.c always writes in base 2**15 for portability.
 PyLong::PyLong(int size, short data[]) {
@@ -48,7 +50,7 @@ PyLong::PyLong(long value) {
     }
 
     ob_digit = new short[size]();
-    memcpy(this->ob_digit, data, size);
+    memcpy(this->ob_digit, data, size * sizeof(short));
     size *= sign;  // add sign to size;
 
     delete[] data;
@@ -83,19 +85,72 @@ PyLong::PyLong(long long value) {
     }
 
     ob_digit = new short[size]();
-    memcpy(this->ob_digit, data, size);
+    memcpy(this->ob_digit, data, size * sizeof(short));
     size *= sign;  // add sign to size;
 
     delete[] data;
 }
 
 string PyLong::toString() {
-    stringstream ss;
-    for (int i = 0; i < (size < 0 ? -size : size); i++) {
-        if (ob_digit)
-            ss << ob_digit[i] << " ";
+    long  size, strlen, size_a;
+    short rem, tenpow;
+    int   negative;
+    int   d;
+
+    size_a   = abs(this->size);
+    negative = this->size < 0;
+
+    d    = (33 * PyLongDecimalShift) / (10 * PyLongShift - 33 * PyLongDecimalShift);
+    size = 1 + size_a + size_a / d;
+
+    short pout[size];
+
+    size = 0;
+    for (int i = size_a; --i >= 0;) {
+        short hi = this->ob_digit[i];
+        for (int j = 0; j < size; j++) {
+            int z   = (int) pout[j] << PyLongShift | hi;
+            hi      = (short) (z / PyLongDecimalBase);
+            pout[j] = (short) (z - (int) hi * PyLongDecimalBase);
+        }
+        while (hi) {
+            pout[size++] = hi % PyLongDecimalBase;
+            hi /= PyLongDecimalBase;
+        }
     }
-    return ss.str();
+
+    if (size == 0)
+        pout[size++] = 0;
+
+    strlen = negative + 1 + (size - 1) * PyLongDecimalShift;
+    tenpow = 10;
+    rem    = pout[size - 1];
+    while (rem >= tenpow) {
+        tenpow *= 10;
+        strlen++;
+    }
+
+    char out[strlen + 1];
+    out[strlen] = 0;
+    char * p    = out + strlen;
+
+    for (int i = 0; i < size - 1; i++) {
+        rem = pout[i];
+        for (int j = 0; j < PyLongDecimalShift; j++) {
+            *--p = '0' + rem % 10;
+            rem /= 10;
+        }
+    }
+    rem = pout[size - 1];
+    do {
+        *--p = '0' + rem % 10;
+        rem /= 10;
+    } while (rem != 0);
+
+    if (negative)
+        *--p = '-';
+
+    return string(p);
 }
 
 PyLong add(const PyLong & a, const PyLong & b) {
