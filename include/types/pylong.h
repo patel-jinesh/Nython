@@ -9,8 +9,8 @@ using namespace std;
 
 class PyLong : public PyObject {
   private:
-    int16_t * digits;
-    uint32_t  size;
+    int16_t * digits = nullptr;  //default value
+    uint32_t  size   = 0;        //default value
 
     friend PyLong add(const PyLong & a, const PyLong & b);
     friend PyLong sub(const PyLong & a, const PyLong & b);
