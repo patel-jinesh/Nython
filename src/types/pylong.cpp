@@ -1,6 +1,5 @@
+#include "types/pylong.h"
 #include <iostream>
-#include <memory>
-#include "types/types.h"
 
 const int PyLongShift        = 15;
 const int PyMarshalShift     = 15;
@@ -12,83 +11,76 @@ const int PyLongDecimalShift = 4;     /* max(e such that 10**e fits in a digit) 
 const int PyLongDecimalBase  = 10000; /* 10 ** DECIMAL_SHIFT */
 
 // Only supporting PyShift = 15, CPython marshal.c always writes in base 2**15 for portability.
-PyLong::PyLong(int size, short data[]) {
-    this->size     = size;
-    this->ob_digit = data;
+PyLong::PyLong(int32_t size, const int16_t data[]) {
+    uint32_t abs = size < 0 ? -size : size;
+    this->size   = size;
+    this->digits = new int16_t[abs];
+    memcpy(digits, data, abs * sizeof(int16_t));
+}
+
+PyLong::PyLong(const PyLong & other) {
+    uint32_t abs = size < 0 ? -size : size;
+    size         = other.size;
+    digits       = new int16_t[abs];
+    memcpy(digits, other.digits, abs * sizeof(int16_t));
+}
+
+PyLong::PyLong(PyLong && other) noexcept {
+    digits       = other.digits;
+    size         = other.size;
+    other.size   = 0;
+    other.digits = nullptr;
+}
+
+PyLong & PyLong::operator=(const PyLong & other) {
+    if (&other == this)
+        return *this;
+
+    delete[] digits;
+    digits = new int16_t[size < 0 ? -size : size];
+    size   = other.size;
+
+    return *this;
+}
+
+PyLong & PyLong::operator=(PyLong && other) noexcept {
+    if (&other == this)
+        return *this;
+
+    delete[] digits;
+    digits       = other.digits;
+    other.digits = nullptr;
+
+    size       = other.size;
+    other.size = 0;
+
+    return *this;
 }
 
 PyLong::~PyLong() {
-    delete[] ob_digit;
-}
-
-// Construct the PyLong by converting value to base 2**15.
-// this is used only for TYPE_INT (4 bytes), thus we only
-// need 3 shorts to represent the value in base 2**15
-PyLong::PyLong(long value) {
-    this->size = 0;
-
-    unsigned long abs_ival;
-    int           sign;
-
-    if (value < 0) {
-        /* negate: can't write this as abs_ival = -ival since that
-        invokes undefined behaviour when ival is LONG_MIN */
-        abs_ival = 0U - (unsigned long) value;
-        sign     = -1;
-    } else {
-        abs_ival = (unsigned long) value;
-        sign     = value != 0;
-    }
-
-    short * data = new short[5];
-    short * p    = data;
-
-    while (abs_ival) {
-        size++;
-        *p++ = abs_ival & PyLongMask;
-        abs_ival >>= PyLongShift;
-    }
-
-    ob_digit = new short[size]();
-    memcpy(this->ob_digit, data, size * sizeof(short));
-    size *= sign;  // add sign to size;
-
-    delete[] data;
+    delete[] digits;
 }
 
 // Construct the PyLong by converting value to base 2**15.
 // this is used only for TYPE_INT64 (8 bytes), thus we only
 // need 5 shorts to represent the value in base 2**15
-PyLong::PyLong(long long value) {
-    this->size = 0;
+PyLong::PyLong(int64_t value) {
+    uint64_t abs_val = value < 0 ? 0U - (uint64_t) value : (uint64_t) value;
+    int32_t  sign    = value == 0 ? 0 : (value < 0 ? -1 : 1);
 
-    unsigned long long abs_ival;
-    int                sign;
+    uint16_t   data[5];
+    uint16_t * p = data;
 
-    if (value < 0) {
-        /* negate: can't write this as abs_ival = -ival since that
-        invokes undefined behaviour when ival is LONG_MIN */
-        abs_ival = 0U - (unsigned long long) value;
-        sign     = -1;
-    } else {
-        abs_ival = (unsigned long long) value;
-        sign     = value != 0;
-    }
-
-    short * data = new short[5];
-    short * p    = data;
-
-    while (abs_ival) {
+    while (abs_val) {
         size++;
-        *p++ = abs_ival & PyLongMask;
-        abs_ival >>= PyLongShift;
+        *p++ = abs_val & PyLongMask;
+        abs_val >>= PyLongShift;
     }
 
-    ob_digit = new short[size]();
-    memcpy(this->ob_digit, data, size * sizeof(short));
-    size *= sign;  // add sign to size;
+    digits = new int16_t[size];
 
-    delete[] data;
+    memcpy(digits, data, size * sizeof(int16_t));
+    size *= sign;  // add sign to size;
 }
 
 string PyLong::toString() {
@@ -97,7 +89,7 @@ string PyLong::toString() {
     int   negative;
     int   d;
 
-    size_a   = abs(this->size);
+    size_a   = this->size < 0 ? -this->size : this->size;
     negative = this->size < 0;
 
     d    = (33 * PyLongDecimalShift) / (10 * PyLongShift - 33 * PyLongDecimalShift);
@@ -107,7 +99,7 @@ string PyLong::toString() {
 
     size = 0;
     for (int i = size_a; --i >= 0;) {
-        short hi = this->ob_digit[i];
+        short hi = this->digits[i];
         for (int j = 0; j < size; j++) {
             int z   = (int) pout[j] << PyLongShift | hi;
             hi      = (short) (z / PyLongDecimalBase);
@@ -154,24 +146,26 @@ string PyLong::toString() {
 }
 
 PyLong add(const PyLong & a, const PyLong & b) {
-    int mx = max(abs(a.size), abs(b.size));
-    int mn = min(abs(a.size), abs(b.size));
+    uint32_t abs_a = a.size < 0 ? -a.size : a.size;
+    uint32_t abs_b = b.size < 0 ? -b.size : b.size;
+    uint32_t mx    = max(abs_a, abs_b);
+    uint32_t mn    = min(abs_a, abs_b);
 
-    short * data = new short[mx + 1];
+    int16_t data[mx + 1];
 
-    const PyLong & small = abs(a.size) < abs(b.size) ? a : b;
-    const PyLong & big   = abs(a.size) < abs(b.size) ? b : a;
+    const PyLong & small = abs_a < abs_b ? a : b;
+    const PyLong & big   = abs_a < abs_b ? b : a;
 
     //can add
-    short carry = 0;
+    uint16_t carry = 0;
 
-    for (int i = 0; i < mn; ++i) {
-        carry += small.ob_digit[i] + big.ob_digit[i];
+    for (uint32_t i = 0; i < mn; ++i) {
+        carry += small.digits[i] + big.digits[i];
         data[i] = carry & PyLongMask;
         carry >>= PyLongShift;
     }
-    for (int i = mn; i < mx; ++i) {
-        carry += big.ob_digit[i];
+    for (uint32_t i = mn; i < mx; ++i) {
+        carry += big.digits[i];
         data[i] = carry & PyLongMask;
         carry >>= PyLongShift;
     }
@@ -182,61 +176,60 @@ PyLong add(const PyLong & a, const PyLong & b) {
 }
 
 PyLong sub(const PyLong & a, const PyLong & b) {
-    int sign   = 1;
-    int borrow = 0;
-    int mx     = max(abs(a.size), abs(b.size));
-    int mn     = min(abs(a.size), abs(b.size));
+    uint8_t  sign   = 1;
+    uint16_t borrow = 0;
+    uint32_t abs_a  = a.size < 0 ? -a.size : a.size;
+    uint32_t abs_b  = b.size < 0 ? -b.size : b.size;
+    uint32_t mx     = max(abs_a, abs_b);
+    uint32_t mn     = min(abs_a, abs_b);
 
-    PyLong small = b;
-    PyLong big   = a;
+    const PyLong * small = &b;
+    const PyLong * big   = &a;
 
-    if (abs(a.size) < abs(b.size)) {
+    if (abs_a < abs_b) {
         sign  = -1;
-        small = a;
-        big   = b;
-    } else if (abs(a.size) == abs(b.size)) {
+        small = &a;
+        big   = &b;
+    } else if (abs_a == abs_b) {
         /* Find highest digit where a and b differ: */
-        int i = abs(big.size);
-        while (--i >= 0 && a.ob_digit[i] == b.ob_digit[i])
+        uint32_t i = abs_a;
+        while (--i >= 0 && a.digits[i] == b.digits[i])
             ;
         if (i < 0)
             return PyLong(0L);
-        if (a.ob_digit[i] < b.ob_digit[i]) {
-            small = a;
-            big   = b;
+        if (a.digits[i] < b.digits[i]) {
+            small = &a;
+            big   = &b;
         }
         mx = mn = i + 1;
     }
 
-    short * data = new short[mx];
+    int16_t data[mx];
 
-    for (int i = 0; i < mn; ++i) {
+    for (int32_t i = 0; i < mn; ++i) {
         /* The following assumes unsigned arithmetic
            works module 2**N for some N>PyLong_SHIFT. */
-        borrow  = a.ob_digit[i] - b.ob_digit[i] - borrow;
-        data[i] = borrow & PyLongMask;
-        borrow >>= PyLongShift;
-        borrow &= 1; /* Keep only one sign bit */
-    }
-    for (int i = mn; i < mx; ++i) {
-        borrow  = a.ob_digit[i] - borrow;
+        borrow  = big->digits[i] - small->digits[i] - borrow;
         data[i] = borrow & PyLongMask;
         borrow >>= PyLongShift;
         borrow &= 1; /* Keep only one sign bit */
     }
 
-    //assert(borrow == 0);
+    for (int32_t i = mn; i < mx; ++i) {
+        borrow  = big->digits[i] - borrow;
+        data[i] = borrow & PyLongMask;
+        borrow >>= PyLongShift;
+        borrow &= 1; /* Keep only one sign bit */
+    }
 
-    if (abs(a.size) != abs(b.size))
+    if (abs_a != abs_b)
         return PyLong(sign < 0 ? -(mx - 1) : (mx - 1), data);  // if size a != size b
     else
         return PyLong(sign < 0 ? -mx : mx, data);  // if size a == size b
 }
 
 PyLong operator-(const PyLong & a) {
-    short * data = new short[abs(a.size)];
-    memcpy(data, a.ob_digit, abs(a.size) * sizeof(short));
-    return PyLong(-a.size, data);
+    return PyLong(-a.size, a.digits);
 }
 
 PyLong operator-(const PyLong & a, const PyLong & b) {
@@ -255,6 +248,7 @@ PyLong operator-(const PyLong & a, const PyLong & b) {
         else
             result = sub(a, b);
     }
+
     return result;
 }
 
@@ -275,32 +269,4 @@ PyLong operator+(const PyLong & a, const PyLong & b) {
     }
 
     return result;
-}
-
-PyLong::PyLong(const PyLong & other) {
-    this->size     = other.size;
-    this->ob_digit = new short[abs(other.size)];
-    memcpy(this->ob_digit, other.ob_digit, abs(other.size) * sizeof(short));
-}
-
-PyLong::PyLong(PyLong && other) noexcept {
-    this->ob_digit = other.ob_digit;
-    this->size     = other.size;
-    other.ob_digit = nullptr;
-}
-
-PyLong & PyLong::operator=(const PyLong & other) {
-    return *this = PyLong(other);
-}
-
-PyLong & PyLong::operator=(PyLong && other) noexcept {
-    short * ob_digit = this->ob_digit;
-    this->ob_digit   = other.ob_digit;
-    other.ob_digit   = ob_digit;
-
-    int size   = this->size;
-    this->size = other.size;
-    other.size = size;
-
-    return *this;
 }

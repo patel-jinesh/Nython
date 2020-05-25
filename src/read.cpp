@@ -117,7 +117,7 @@ shared_ptr<PyFloat> read_pybinfloat(PYFILE * file) {
 }
 
 shared_ptr<PyDict> read_dict(PYFILE * file) {
-    vector<shared_ptr<PyObject>> data;
+    unordered_map<shared_ptr<PyObject>, shared_ptr<PyObject>> data;
 
     do {
         shared_ptr<PyObject> key = read_object(file);
@@ -125,35 +125,30 @@ shared_ptr<PyDict> read_dict(PYFILE * file) {
         if (key == nullptr)
             break;
 
-        data.push_back(key);
-        data.push_back(read_object(file));
+        data[key] = read_object(file);
     } while (true);
 
     return make_shared<PyDict>(data);
 }
 
 shared_ptr<PySet> read_set(PYFILE * file) {
-    int n = read_int(file);
+    int                          n = read_int(file);
+    vector<shared_ptr<PyObject>> data(n);
 
-    shared_ptr<PySet> set = make_shared<PySet>(n);
+    for (int i = 0; i < n; i++)
+        data[i] = read_object(file);
 
-    for (int i = 0; i < n; i++) {
-        (*set)[i] = read_object(file);
-    }
-
-    return set;
+    return make_shared<PySet>(data);
 }
 
 shared_ptr<PyList> read_list(PYFILE * file) {
-    int n = read_int(file);
+    int                          n = read_int(file);
+    vector<shared_ptr<PyObject>> data(n);
 
-    shared_ptr<PyList> list = make_shared<PyList>(n);
+    for (int i = 0; i < n; i++)
+        data[i] = read_object(file);
 
-    for (int i = 0; i < n; i++) {
-        (*list)[i] = read_object(file);
-    }
-
-    return list;
+    return make_shared<PyList>(data);
 }
 
 shared_ptr<PyLong> read_pyint64(PYFILE * file) {
@@ -170,41 +165,37 @@ shared_ptr<PyLong> read_pylong(PYFILE * file) {
 }
 
 shared_ptr<PyString> read_ascii(PYFILE * file) {
-    shared_ptr<PyString> data = make_shared<PyString>();
-    data->len                 = read_int(file);
-    data->value               = (const char *) read_bytes(file, data->len);
+    int32_t              size  = read_int(file);
+    const char8_t *      value = (const char8_t *) read_bytes(file, size);
+    shared_ptr<PyString> data  = make_shared<PyString>(size, value);
     return data;
 }
 
 shared_ptr<PyString> read_short_ascii(PYFILE * file) {
-    shared_ptr<PyString> data = make_shared<PyString>();
-    data->len                 = read_byte(file);
-    data->value               = (const char *) read_bytes(file, data->len);
+    int8_t               size  = read_int(file);
+    const char8_t *      value = (const char8_t *) read_bytes(file, size);
+    shared_ptr<PyString> data  = make_shared<PyString>(size, value);
     return data;
 }
 
 shared_ptr<PyTuple> read_tuple(PYFILE * file) {
-    int n = read_int(file);
+    int                          n = read_int(file);
+    vector<shared_ptr<PyObject>> data(n);
 
-    shared_ptr<PyTuple> tuple = make_shared<PyTuple>(n);
+    for (int i = 0; i < n; i++)
+        data[i] = read_object(file);
 
-    for (int i = 0; i < n; i++) {
-        (*tuple)[i] = read_object(file);
-    }
-
-    return tuple;
+    return make_shared<PyTuple>(data);
 }
 
 shared_ptr<PyTuple> read_small_tuple(PYFILE * file) {
-    int n = read_byte(file);
+    int                          n = read_byte(file);
+    vector<shared_ptr<PyObject>> data(n);
 
-    shared_ptr<PyTuple> tuple = make_shared<PyTuple>(n);
+    for (int i = 0; i < n; i++)
+        data[i] = read_object(file);
 
-    for (int i = 0; i < n; i++) {
-        (*tuple)[i] = read_object(file);
-    }
-
-    return tuple;
+    return make_shared<PyTuple>(data);
 }
 
 inline long long read_int64(PYFILE * file) {
@@ -232,10 +223,7 @@ inline unsigned char * read_bytes(PYFILE * file, int num) {
 }
 
 shared_ptr<PyString> read_string(PYFILE * file) {
-    shared_ptr<PyString> data = make_shared<PyString>();
-    data->len                 = read_int(file);
-    data->value               = (const char *) read_bytes(file, data->len);
-    return data;
+    return read_ascii(file);
 }
 
 shared_ptr<PyCode> read_code(PYFILE * file) {

@@ -1,10 +1,11 @@
-#include "types/types.h"
+#include "types/pycomplex.h"
 
-PyComplex::PyComplex(double a, double b) {
-    this->a = a;
-    this->b = b;
+PyComplex::PyComplex() {
+    this->_real = 0;
+    this->_imag = 0;
 }
 
-string PyComplex::toString() {
-    return to_string(this->a) + " + " + to_string(this->b) + "j";
+PyComplex::PyComplex(PyFloat real, PyFloat imag) {
+    this->_real = real;
+    this->_imag = imag;
 }

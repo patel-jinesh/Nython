@@ -1,9 +1,9 @@
-#include "types/types.h"
+#include "types/pyfloat.h"
+
+PyFloat::PyFloat() {
+    this->data = 0;
+}
 
 PyFloat::PyFloat(double data) {
     this->data = data;
-}
-
-string PyFloat::toString() {
-    return to_string(data);
 }

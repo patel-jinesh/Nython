@@ -1,5 +1,4 @@
-#ifndef READ_H
-#define READ_H
+#pragma once
 
 #include <stdio.h>
 #include <memory>
@@ -18,5 +17,3 @@ shared_ptr<PyObject> read_object(PYFILE * file);
 // Function to read pyc files.
 shared_ptr<PyCode> read(const char * filename);
 #pragma endregion
-
-#endif

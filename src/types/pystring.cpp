@@ -1,7 +1,8 @@
-#include "types/types.h"
+#include "types/pystring.h"
 
-string PyString::toString() {
-    return string(value, len);
+PyString::PyString(uint32_t len, const char8_t * value) {
+    this->len   = len;
+    this->value = value;
 }
 
 PyString::~PyString() {
