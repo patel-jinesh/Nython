@@ -161,7 +161,7 @@ shared_ptr<PyLong> read_pyint(PYFILE * file) {
 
 shared_ptr<PyLong> read_pylong(PYFILE * file) {
     int size = read_int(file);
-    return make_shared<PyLong>(size, (short *) read_bytes(file, (size < 0 ? -size : size) * 2));
+    return make_shared<PyLong>(size, (uint16_t *) read_bytes(file, (size < 0 ? -size : size) * 2));
 }
 
 shared_ptr<PyString> read_ascii(PYFILE * file) {
